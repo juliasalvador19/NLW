@@ -1,86 +1,122 @@
 import { Search, MoreHorizontal, ChevronLeft, ChevronRight, ChevronsRight, ChevronsLeft } from 'lucide-react'
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { IconButton } from './icon-button'
+import { Table } from './table/table'
+import { TableHeader } from './table/table-header'
+import { TableCell } from './table/table-cell'
+import { TableRow } from './table/table-row'
+import { ChangeEvent, useState } from 'react'
+import { attendees } from '../data/attendees'
 
-export function AttendeeList()
-{
+dayjs.extend(relativeTime)
+dayjs.locale('pt-br')
+
+export function AttendeeList() {
+    const [searchInput, setSearch]= useState('')
+    const [page, setPage] = useState(1)
+
+    const totalPages = Math.ceil(attendees.length / 10)
+
+    function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
+        setSearch(event.target.value)
+    }
+
+    function goToPreviousPage() {
+        setPage(page - 1)
+    }
+
+    function goToNextPage() {
+        setPage(page + 1)
+    }
+
+    function goToLastPage() {
+       setPage(totalPages)
+    }
+
+    function goToFirstPage() {
+        setPage(1)
+    }
+    
+
     return (
         <div className='flex flex-col gap-4'>
             <div className="flex gap-3 items-center">
                 <h1 className="text-2xl font-bold">Participantes</h1>
                 <div className="px-3 py-1.5 w-72 border border-white/10 rounded-lg text-sm flex items-center gap-3">
                     <Search className="size-4 text-emerald-300" />
-                    <input className="bg-transparent flex-1 outline-none border-0 p-0 text-sm" placeholder="Buscar participante..."/>
+                    <input onChange={onSearchInputChanged} className="bg-transparent flex-1 outline-none border-0 p-0 text-sm" placeholder="Buscar participante..."/>
                 </div>
+                {searchInput}
             </div>
 
-            <div className='border border-white/10 rounded-lg'>
-                <table className='w-full'>
+            <Table>
                     <thead>
                         <tr className='border-b border-white/10'>
-                            <th style={{ width: 48 }}  className='py-3 px-4 text-sm font-semibold text-left'>
+                            <TableHeader style={{ width: 48 }} >
                                 <input type="checkbox" className='size-4 bg-black/20 rounded border border-white/10'/>
-                            </th>
-                            <th className='py-3 px-4 text-sm font-semibold text-left'>Código</th>
-                            <th className='py-3 px-4 text-sm font-semibold text-left'>Participante</th>
-                            <th className='py-3 px-4 text-sm font-semibold text-left'>Data de inscrição</th>
-                            <th className='py-3 px-4 text-sm font-semibold text-left'>Data do check-int</th>
-                            <th style={{ width: 64 }} className='py-3 px-4 text-sm font-semibold text-left'></th>
+                            </TableHeader>
+                            <TableHeader>Código</TableHeader>
+                            <TableHeader>Participante</TableHeader>
+                            <TableHeader>Data de inscrição</TableHeader>
+                            <TableHeader>Data do check-int</TableHeader>
+                            <TableHeader style={{ width: 64 }}></TableHeader>
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.from ({ length: 8}).map((_, i) => {
+                        {attendees.slice((page - 1) * 10, page * 10).map((attendee) => {
                           return (
-                            <tr key={i} className='border-b border-white/10 hover:bg-white/5'>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>
+                            <TableRow key={attendee.id} className='border-b border-white/10 hover:bg-white/5'>
+                            <TableCell>
                                 <input type="checkbox" className='size-4 bg-black/20 rounded border border-white/10'/>
-                            </td>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>123</td>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>
+                            </TableCell>
+                            <TableCell>{attendee.id}</TableCell>
+                            <TableCell>
                                 <div className='flex flex-col gap-1'>
-                                    <span className='font-semibold text-white'>Julia Salvador</span>
-                                    <span>juliasalvador10@gmail.com</span>
+                                    <span className='font-semibold text-white'>{attendee.name}</span>
+                                    <span>{attendee.email}</span>
                                 </div>
-                            </td>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>7 dias atrás</td>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>3 dias atrás</td>
-                            <td className='py-3 px-4 text-sm text-zinc-300'>
+                            </TableCell>
+                            <TableCell>{dayjs().to(attendee.createdAd)}</TableCell>
+                            <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
+                            <TableCell>
                                 <IconButton transparent={true}>
                                     <MoreHorizontal className='size-4'/>
                                 </IconButton>
-                            </td>
-                        </tr>
+                            </TableCell>
+                        </TableRow>
                           )  
                         })}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td className='py-3 px-4 text-sm text-zinc-300' colSpan={3}>
-                                Mostrando 10 de 228 itens
-                            </td>
-                            <td className='py-3 px-4 text-sm text-zinc-300 text-right' colSpan={3}>
+                            <TableCell colSpan={3}>
+                                Mostrando 10 de {attendees.length} itens
+                            </TableCell>
+                            <TableCell className='py-3 px-4 text-sm text-zinc-300 text-right' colSpan={3}>
                             <div className='inline-flex items-center gap-8'>
-                                <span>Página 1 de 23</span>
+                                <span>Página {page} de {totalPages}</span>
 
                                 <div className='flex gap-1.5'>
-                                    <IconButton>
+                                    <IconButton onClick={goToFirstPage} disabled={page=== 1}>
                                         <ChevronsLeft className='size-4'/>
                                     </IconButton>
-                                    <IconButton>
+                                    <IconButton onClick={goToPreviousPage} disabled={page === 1}>
                                         <ChevronLeft className='size-4'/>
                                     </IconButton>
-                                    <IconButton>
+                                    <IconButton onClick={goToNextPage} disabled={page === totalPages}>
                                         <ChevronRight className='size-4'/>
                                     </IconButton>
-                                    <IconButton>
+                                    <IconButton onClick={goToLastPage} disabled={page === totalPages}>
                                         <ChevronsRight className='size-4'/>
                                     </IconButton>
                                 </div>
                             </div>
-                            </td>
+                            </TableCell>
                         </tr>
                     </tfoot>
-                </table>
-            </div>
+                </Table>
         </div>
     )
 }
